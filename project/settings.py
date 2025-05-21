@@ -12,6 +12,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG")
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
+CSRF_TRUSTED_ORIGINS = ['https://ride-production-f23c.up.railway.app', 'http://ride-production-f23c.up.railway.app',]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
