@@ -4,6 +4,9 @@ from location_field.models.plain import PlainLocationField
 from user.choices import USER_CHOICES, SERVICE_CHOICES
 from user.managers import UserManager
 
+class ServiceType(models.Model):
+    name = models.CharField(max_length=20, unique=True)
+
 
 class User(AbstractUser):
     username = None
@@ -12,9 +15,15 @@ class User(AbstractUser):
     phone = models.CharField(max_length=20, unique=True)
     image = models.ImageField(upload_to="user/images/")
     user_type = models.CharField(max_length=2, choices=USER_CHOICES)
-    service_type = models.CharField(
-        max_length=2,
-        choices=SERVICE_CHOICES,
+    # service_type = models.CharField(
+    #     max_length=2,
+    #     choices=SERVICE_CHOICES,
+    #     null=True,
+    #     blank=True,
+    # )
+    service_type = models.ForeignKey(
+        ServiceType,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )

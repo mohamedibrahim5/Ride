@@ -7,13 +7,30 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
 from fcm_django.models import FCMDevice
+from user.models import ServiceType
 
 
 User = get_user_model()
 
 
+class ServiceTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceType
+        fields = ["id", "name"]
+
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    # Input for creation/update
+    service_type = serializers.PrimaryKeyRelatedField(
+        queryset=ServiceType.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True
+    )
+
+    # Output for response
+    service_type_display = ServiceTypeSerializer(source='service_type', read_only=True)
+
 
     class Meta:
         model = User
@@ -25,7 +42,8 @@ class UserSerializer(serializers.ModelSerializer):
             "password",
             "image",
             "user_type",
-            "service_type",
+            "service_type",           # write-only
+            "service_type_display",   # read-only
             "documents",
         ]
 
@@ -89,6 +107,7 @@ class LoginSerializer(serializers.Serializer):
         user = User.objects.filter(phone=phone).first()
 
         if not user:
+            print('njhjhjhj')
             raise serializers.ValidationError(_("Invalid phone"))
 
         if not user.check_password(password):
@@ -294,3 +313,9 @@ class DeleteUserSerializer(serializers.Serializer):
         user.delete()
 
         return user
+    
+# class ServiceProviderTypeSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ServiceType
+#         fields = "__all__"
+

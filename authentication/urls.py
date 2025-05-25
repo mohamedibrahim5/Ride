@@ -11,6 +11,14 @@ from authentication.views import (
     LogoutView,
     DeleteUserView,
 )
+# from rest_framework.routers import DefaultRouter
+# from authentication.views import ServiceProviderType
+# from django.urls import path, include
+
+
+# router = DefaultRouter()
+# router.register(r'service-types', ServiceProviderType, basename='service-type')
+
 
 
 urlpatterns = [
@@ -24,4 +32,6 @@ urlpatterns = [
     path("fcm-device/", FcmDeviceView.as_view(), name="fcm-device"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("delete/", DeleteUserView.as_view(), name="delete-user"),
+    # Include service type routes
+    # path("", include(router.urls)),
 ]
