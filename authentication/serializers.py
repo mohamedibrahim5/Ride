@@ -1,36 +1,25 @@
-from authentication.choices import FCM_CHOICES
-from authentication.models import UserOtp
+from authentication.choices import ROLE_CHOICES, FCM_CHOICES
+from authentication.models import (
+    Service,
+    User,
+    OneTimePassword,
+    Driver,
+    DriverCar,
+    Customer,
+    CustomerPlace,
+)
 from authentication.utils import send_sms
-from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
 from fcm_django.models import FCMDevice
-from user.models import ServiceType
 
-
-User = get_user_model()
-
-
-class ServiceTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ServiceType
-        fields = ["id", "name"]
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    # Input for creation/update
-    service_type = serializers.PrimaryKeyRelatedField(
-        queryset=ServiceType.objects.all(),
-        required=False,
-        allow_null=True,
-        write_only=True
-    )
-
-    # Output for response
-    service_type_display = ServiceTypeSerializer(source='service_type', read_only=True)
-
+    role = serializers.ChoiceField(write_only=True, choices=ROLE_CHOICES)
+    service_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = User
@@ -41,26 +30,23 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "password",
             "image",
-            "user_type",
-            "service_type",           # write-only
-            "service_type_display",   # read-only
+            "role",
+            "service_id",
             "documents",
         ]
 
-        kwargs = {
-            "user_type": {"write_only": True},
-            "service_type": {"write_only": True},
-        }
-
     def validate(self, attrs):
-        user_type = attrs.get("user_type")
-        service_type = attrs.get("service_type", None)
+        role = attrs.get("role")
+        service_id = attrs.get("service_id", None)
 
-        if user_type == "PR" and not service_type:
-            raise serializers.ValidationError(_("Service type is required"))
-
-        if user_type != "PR" and service_type:
-            attrs.pop("service_type")
+        if role == "PR":
+            if service_id:
+                service_id = attrs.pop("service_id")
+                attrs["service"] = Service.objects.get(pk=service_id)
+            else:
+                raise serializers.ValidationError(_("Service ID is required"))
+        elif service_id:
+            attrs.pop("service_id")
 
         return attrs
 
@@ -72,7 +58,7 @@ class UserSerializer(serializers.ModelSerializer):
         if otp:
             user = User.objects.create_user(**validated_data)
 
-            UserOtp.objects.update_or_create(user=user, otp=otp)
+            OneTimePassword.objects.update_or_create(user=user, otp=otp)
 
             return user
         else:
@@ -85,11 +71,11 @@ class UserSerializer(serializers.ModelSerializer):
         if "password" in validated_data:
             validated_data.pop("password")
 
-        if "user_type" in validated_data:
-            validated_data.pop("user_type")
+        if "role" in validated_data:
+            validated_data.pop("role")
 
-        if "service_type" in validated_data:
-            validated_data.pop("service_type")
+        if "service_id" in validated_data:
+            validated_data.pop("service_id")
 
         return super().update(instance, validated_data)
 
@@ -107,7 +93,7 @@ class LoginSerializer(serializers.Serializer):
         user = User.objects.filter(phone=phone).first()
 
         if not user:
-            print('njhjhjhj')
+            print("njhjhjhj")
             raise serializers.ValidationError(_("Invalid phone"))
 
         if not user.check_password(password):
@@ -140,7 +126,7 @@ class SendOtpSerializer(serializers.Serializer):
         otp = send_sms(phone)
 
         if otp:
-            UserOtp.objects.update_or_create(user=user, otp=otp)
+            OneTimePassword.objects.update_or_create(user=user, otp=otp)
         else:
             raise serializers.ValidationError(_("Try again later"))
 
@@ -161,12 +147,12 @@ class VerifyOtpSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError(_("Invalid phone"))
 
-        user_otp = UserOtp.objects.filter(user=user).first()
+        user_otp = OneTimePassword.objects.filter(user=user).first()
 
         if not user_otp or user_otp.otp != otp:
             raise serializers.ValidationError(_("Invalid otp"))
 
-        if user.is_verified or user.user_type == "CU":
+        if user.is_verified or user.role == "CU":
             attrs["token"] = Token.objects.get(user=user).key
             user.last_login = timezone.now()
             user.is_verified = True
@@ -193,7 +179,7 @@ class ResetPasswordSerializer(serializers.Serializer):
 
         user = self.context.get("user")
 
-        user_otp = UserOtp.objects.filter(user=user).first()
+        user_otp = OneTimePassword.objects.filter(user=user).first()
 
         if not user_otp or user_otp.otp != otp:
             raise serializers.ValidationError(_("Invalid otp"))
@@ -313,9 +299,31 @@ class DeleteUserSerializer(serializers.Serializer):
         user.delete()
 
         return user
-    
-# class ServiceProviderTypeSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = ServiceType
-#         fields = "__all__"
 
+
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = ["id", "name"]
+
+
+class DriverCarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DriverCar
+        fields = ["id", "type", "model", "number", "color", "image", "documents"]
+
+    def create(self, validated_data):
+        user = self.context.get("user")
+        driver = Driver.objects.get(user=user)
+        return DriverCar.objects.create(driver=driver, **validated_data)
+
+
+class CustomerPlaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerPlace
+        fields = ["id", "title", "location"]
+
+    def create(self, validated_data):
+        user = self.context.get("user")
+        customer = Customer.objects.get(user=user)
+        return CustomerPlace.objects.create(customer=customer, **validated_data)

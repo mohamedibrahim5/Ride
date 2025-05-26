@@ -21,10 +21,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "user",
-    "customer",
-    "driver",
-    "provider",
     "authentication",
     "location_field.apps.DefaultConfig",
     "rest_framework",
@@ -108,7 +104,7 @@ else:
     CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
     CELERY_WORKER_SEND_TASK_EVENTS = True
 
-AUTH_USER_MODEL = "user.User"
+AUTH_USER_MODEL = "authentication.User"
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"

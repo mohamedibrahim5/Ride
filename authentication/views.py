@@ -1,3 +1,4 @@
+from authentication.models import Service, DriverCar, CustomerPlace
 from authentication.serializers import (
     UserSerializer,
     LoginSerializer,
@@ -8,12 +9,14 @@ from authentication.serializers import (
     FcmDeviceSerializer,
     LogoutSerializer,
     DeleteUserSerializer,
-    # ServiceProviderTypeSerializer
+    ServiceSerializer,
+    DriverCarSerializer,
+    CustomerPlaceSerializer,
 )
+from authentication.permissions import IsAdminOrReadOnly
 from rest_framework import status, generics, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from user.models import ServiceType
 
 
 class UserRegisterView(generics.GenericAPIView):
@@ -125,11 +128,27 @@ class DeleteUserView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
-    
-# class ServiceProviderType(viewsets.ModelViewSet):
-#     queryset = ServiceType.objects.all()
-#     serializer_class = ServiceProviderTypeSerializer
 
-#     def get_queryset(self):
-#         return self.queryset
-    
+
+class ServiceViewSet(viewsets.ModelViewSet):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
+class DriverCarViewSet(viewsets.ModelViewSet):
+    queryset = DriverCar.objects.select_related("driver__user")
+    serializer_class = DriverCarSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_context(self):
+        return super().get_serializer_context() | {"user": self.request.user}
+
+
+class CustomerPlaceViewSet(viewsets.ModelViewSet):
+    queryset = CustomerPlace.objects.select_related("customer__user")
+    serializer_class = CustomerPlaceSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_context(self):
+        return super().get_serializer_context() | {"user": self.request.user}

@@ -11,10 +11,7 @@ urlpatterns = [
         name="welcome-page",
     ),
     path("admin/", admin.site.urls),
-    path("customer/", include("customer.urls")),
-    path("driver/", include("driver.urls")),
     path("authentication/", include("authentication.urls")),
-    path("provider/", include("provider.urls")),
 ]
 
 
