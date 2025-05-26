@@ -1,9 +1,8 @@
-/media/
-/static/
-/logs/
 /.venv/
 /.idea/
-*/migrations/
-*/__pycache__/
-celerybeat-schedule
+/logs/
+/media/
+/static/
 db.sqlite3
+celerybeat-schedule
+.env

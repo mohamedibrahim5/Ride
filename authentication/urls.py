@@ -1,4 +1,3 @@
-from django.urls import path
 from authentication.views import (
     UserRegisterView,
     LoginView,
@@ -10,15 +9,18 @@ from authentication.views import (
     FcmDeviceView,
     LogoutView,
     DeleteUserView,
+    ServiceViewSet,
+    DriverCarViewSet,
+    CustomerPlaceViewSet,
 )
-# from rest_framework.routers import DefaultRouter
-# from authentication.views import ServiceProviderType
-# from django.urls import path, include
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
 
-# router = DefaultRouter()
-# router.register(r'service-types', ServiceProviderType, basename='service-type')
-
+router = DefaultRouter()
+router.register("services", ServiceViewSet, basename="services")
+router.register("driver-cars", DriverCarViewSet, basename="driver-cars")
+router.register("customer-places", CustomerPlaceViewSet, basename="customer-places")
 
 
 urlpatterns = [
@@ -32,6 +34,5 @@ urlpatterns = [
     path("fcm-device/", FcmDeviceView.as_view(), name="fcm-device"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("delete/", DeleteUserView.as_view(), name="delete-user"),
-    # Include service type routes
-    # path("", include(router.urls)),
+    path("", include(router.urls)),
 ]
