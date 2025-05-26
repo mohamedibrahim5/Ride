@@ -17,6 +17,9 @@ from authentication.permissions import IsAdminOrReadOnly
 from rest_framework import status, generics, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from geopy.distance import geodesic
+from .models import User
 
 
 class UserRegisterView(generics.GenericAPIView):
@@ -152,3 +155,36 @@ class CustomerPlaceViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         return super().get_serializer_context() | {"user": self.request.user}
+
+
+
+class NearbyUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            lat = float(request.query_params.get("lat"))
+            lng = float(request.query_params.get("lng"))
+        except (TypeError, ValueError):
+            return Response({"detail": "lat and lng are required and must be valid floats"}, status=400)
+
+        service_id = request.query_params.get("service_id")
+
+        users = User.objects.filter(is_active=True, is_verified=True, location__isnull=False)
+
+        if service_id:
+            users = users.filter(service__id=service_id)
+
+        current_location = (lat, lng)
+
+        def distance(user):
+            user_location = tuple(map(float, user.location.split(',')))
+            return geodesic(current_location, user_location).km
+
+        users_with_distance = [(user, distance(user)) for user in users]
+        users_with_distance.sort(key=lambda x: x[1])  # sort by distance ascending
+
+        nearby_users = [user for user, _ in users_with_distance]
+
+        serializer = UserSerializer(nearby_users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
