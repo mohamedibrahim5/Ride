@@ -12,6 +12,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG")
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
+CSRF_TRUSTED_ORIGINS = ['https://ride-production-f23c.up.railway.app', 'http://ride-production-f23c.up.railway.app',]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -66,8 +67,12 @@ WSGI_APPLICATION = "project.wsgi.application"
 if DEBUG:
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "railway",              # Replace with your actual DB name
+            "USER": "postgres",             # Replace with your actual DB user
+            "PASSWORD": "cYneBTChJqLOyGzMhjvDJmyufSuAFahB",   # Replace with your actual DB password
+            "HOST": "postgres.railway.internal",  # Use Railway's host
+            "PORT": "5432",                # PostgreSQL default port
         }
     }
 else:
