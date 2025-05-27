@@ -12,7 +12,7 @@ from authentication.views import (
     ServiceViewSet,
     DriverCarViewSet,
     CustomerPlaceViewSet,
-    NearbyUsersView
+    ProviderViewSet,
 )
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
@@ -20,6 +20,7 @@ from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register("services", ServiceViewSet, basename="services")
+router.register("providers", ProviderViewSet, basename="providers")
 router.register("driver-cars", DriverCarViewSet, basename="driver-cars")
 router.register("customer-places", CustomerPlaceViewSet, basename="customer-places")
 
@@ -36,5 +37,4 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("delete/", DeleteUserView.as_view(), name="delete-user"),
     path("", include(router.urls)),
-    path("nearby-users/", NearbyUsersView.as_view(), name="nearby-users"),
 ]

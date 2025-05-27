@@ -1,6 +1,8 @@
 import requests, pyotp
 from firebase_admin import messaging
 
+from authentication.models import Provider, Driver, Customer
+
 
 def send_sms(phone):
     # url = "http://messaging.cyparta.com/api/send-sms/"
@@ -28,7 +30,7 @@ def send_fcm_notification(token, title, body):
             title=title,
             body=body,
         ),
-        token=token,  # This is the FCM device token of the recipient
+        token=token,
     )
 
     try:
@@ -38,3 +40,35 @@ def send_fcm_notification(token, title, body):
     except Exception as e:
         print("Error sending message:", e)
         return None
+
+
+def retrieve_object(user):
+    if user.role == "CU":
+        return Customer.objects.select_related("user").get(user=user)
+    elif user.role == "DR":
+        return Driver.objects.select_related("user").get(user=user)
+    elif user.role == "PR":
+        return Provider.objects.select_related("user").get(user=user)
+
+    return None
+
+
+def extract_user_data(initial_data):
+    return {
+        "name": initial_data.get("name"),
+        "phone": initial_data.get("phone"),
+        "email": initial_data.get("email"),
+        "password": initial_data.get("password"),
+        "image": initial_data.get("image"),
+        "location": initial_data.get("location"),
+        "role": initial_data.get("role"),
+    }
+
+
+def update_user_data(instance, initial_data):
+    return {
+        "name": initial_data.get("name", instance.user.name),
+        "email": initial_data.get("email", instance.user.email),
+        "image": initial_data.get("image", instance.user.image),
+        "location": initial_data.get("location", instance.user.location),
+    }

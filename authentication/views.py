@@ -1,4 +1,12 @@
-from authentication.models import Service, DriverCar, CustomerPlace
+from authentication.filters import ProviderFilter
+from authentication.models import (
+    Provider,
+    Driver,
+    Customer,
+    Service,
+    DriverCar,
+    CustomerPlace,
+)
 from authentication.serializers import (
     UserSerializer,
     LoginSerializer,
@@ -6,6 +14,9 @@ from authentication.serializers import (
     VerifyOtpSerializer,
     ResetPasswordSerializer,
     ChangePasswordSerializer,
+    ProviderSerializer,
+    DriverSerializer,
+    CustomerSerializer,
     FcmDeviceSerializer,
     LogoutSerializer,
     DeleteUserSerializer,
@@ -15,27 +26,26 @@ from authentication.serializers import (
 )
 from authentication.permissions import IsAdminOrReadOnly
 from rest_framework import status, generics, viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from geopy.distance import geodesic
-from .models import User
-from .pagination import CustomPagination
+from django_filters.rest_framework import DjangoFilterBackend
 
 
-class UserRegisterView(generics.GenericAPIView):
-    permission_classes = [AllowAny]
-    serializer_class = UserSerializer
+class UserRegisterView(generics.CreateAPIView):
+    def get_serializer_class(self):
+        role = self.request.data.get("role")
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if role == "CU":
+            return CustomerSerializer
+        elif role == "DR":
+            return DriverSerializer
+        elif role == "PR":
+            return ProviderSerializer
+
+        return UserSerializer
 
 
 class LoginView(generics.GenericAPIView):
-    permission_classes = [AllowAny]
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
@@ -45,7 +55,6 @@ class LoginView(generics.GenericAPIView):
 
 
 class SendOtpView(generics.GenericAPIView):
-    permission_classes = [AllowAny]
     serializer_class = SendOtpSerializer
 
     def post(self, request, *args, **kwargs):
@@ -55,7 +64,6 @@ class SendOtpView(generics.GenericAPIView):
 
 
 class VerifyOtpView(generics.GenericAPIView):
-    permission_classes = [AllowAny]
     serializer_class = VerifyOtpSerializer
 
     def post(self, request, *args, **kwargs):
@@ -92,10 +100,31 @@ class ChangePasswordView(generics.GenericAPIView):
 
 class ProfileUserView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = UserSerializer
 
     def get_object(self):
+        user = self.request.user
+        role = self.request.user.role
+
+        if role == "CU":
+            return Customer.objects.select_related("user").get(user=user)
+        elif role == "DR":
+            return Driver.objects.select_related("user").get(user=user)
+        elif role == "PR":
+            return Provider.objects.select_related("user").get(user=user)
+
         return self.request.user
+
+    def get_serializer_class(self):
+        role = self.request.user.role
+
+        if role == "CU":
+            return CustomerSerializer
+        elif role == "DR":
+            return DriverSerializer
+        elif role == "PR":
+            return ProviderSerializer
+
+        return UserSerializer
 
 
 class FcmDeviceView(generics.CreateAPIView):
@@ -158,41 +187,15 @@ class CustomerPlaceViewSet(viewsets.ModelViewSet):
         return super().get_serializer_context() | {"user": self.request.user}
 
 
-
-from rest_framework.pagination import PageNumberPagination
-
-class NearbyUsersView(APIView):
+class ProviderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    pagination_class = CustomPagination
+    serializer_class = ProviderSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProviderFilter
 
-    def get(self, request, *args, **kwargs):
-        try:
-            lat = float(request.query_params.get("lat"))
-            lng = float(request.query_params.get("lng"))
-        except (TypeError, ValueError):
-            return Response({"detail": "lat and lng are required and must be valid floats"}, status=400)
-
-        service_id = request.query_params.get("service_id")
-
-        users = User.objects.filter(is_active=True, is_verified=True, location__isnull=False)
-
-        if service_id:
-            users = users.filter(service__id=service_id)
-
-        current_location = (lat, lng)
-
-        def distance(user):
-            user_location = tuple(map(float, user.location.split(',')))
-            return geodesic(current_location, user_location).km
-
-        users_with_distance = [(user, distance(user)) for user in users]
-        users_with_distance.sort(key=lambda x: x[1])  # Sort by distance
-
-        nearby_users = [user for user, _ in users_with_distance]
-
-        # Paginate manually
-        paginator = self.pagination_class()
-        page = paginator.paginate_queryset(nearby_users, request)
-        serializer = UserSerializer(page, many=True)
-
-        return paginator.get_paginated_response(serializer.data)
+    def get_queryset(self):
+        service_id = self.request.query_params.get("service_id")
+        return Provider.objects.filter(
+            service__id=service_id,
+            is_verified=True,
+        ).select_related("user")
