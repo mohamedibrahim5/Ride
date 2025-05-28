@@ -16,10 +16,17 @@ from django.utils import timezone
 from fcm_django.models import FCMDevice
 
 
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = ["id", "name"]
+
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    role = serializers.ChoiceField(write_only=True, choices=ROLE_CHOICES)
+    role = serializers.ChoiceField(choices=ROLE_CHOICES)
     service_id = serializers.IntegerField(write_only=True)
+    service = ServiceSerializer(read_only=True)
+    
 
     class Meta:
         model = User
@@ -32,7 +39,9 @@ class UserSerializer(serializers.ModelSerializer):
             "image",
             "role",
             "service_id",
+            "service",
             "documents",
+            'location'
         ]
 
     def validate(self, attrs):
@@ -41,8 +50,12 @@ class UserSerializer(serializers.ModelSerializer):
 
         if role == "PR":
             if service_id:
-                service_id = attrs.pop("service_id")
-                attrs["service"] = Service.objects.get(pk=service_id)
+                try:
+                    service_id = attrs.pop("service_id")
+                    attrs["service"] = Service.objects.get(pk=service_id)
+                except Service.DoesNotExist:
+                    raise serializers.ValidationError(_("Invalid service ID"))
+                
             else:
                 raise serializers.ValidationError(_("Service ID is required"))
         elif service_id:
@@ -160,6 +173,8 @@ class VerifyOtpSerializer(serializers.Serializer):
             user.save()
         else:
             attrs["is_verified"] = False
+            user.is_active = True
+            user.save()
 
         return attrs
 
@@ -301,10 +316,6 @@ class DeleteUserSerializer(serializers.Serializer):
         return user
 
 
-class ServiceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Service
-        fields = ["id", "name"]
 
 
 class DriverCarSerializer(serializers.ModelSerializer):

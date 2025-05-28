@@ -19,7 +19,7 @@ class User(AbstractUser):
     phone = models.CharField(max_length=20, unique=True)
     image = models.ImageField(upload_to="user/images/")
     role = models.CharField(max_length=2, choices=ROLE_CHOICES)
-    service = models.OneToOneField(
+    service = models.ForeignKey(
         Service,
         on_delete=models.CASCADE,
         null=True,

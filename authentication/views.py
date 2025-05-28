@@ -20,6 +20,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from geopy.distance import geodesic
 from .models import User
+from .pagination import CustomPagination
 
 
 class UserRegisterView(generics.GenericAPIView):
@@ -158,8 +159,11 @@ class CustomerPlaceViewSet(viewsets.ModelViewSet):
 
 
 
+from rest_framework.pagination import PageNumberPagination
+
 class NearbyUsersView(APIView):
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get(self, request, *args, **kwargs):
         try:
@@ -182,9 +186,13 @@ class NearbyUsersView(APIView):
             return geodesic(current_location, user_location).km
 
         users_with_distance = [(user, distance(user)) for user in users]
-        users_with_distance.sort(key=lambda x: x[1])  # sort by distance ascending
+        users_with_distance.sort(key=lambda x: x[1])  # Sort by distance
 
         nearby_users = [user for user, _ in users_with_distance]
 
-        serializer = UserSerializer(nearby_users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Paginate manually
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(nearby_users, request)
+        serializer = UserSerializer(page, many=True)
+
+        return paginator.get_paginated_response(serializer.data)
