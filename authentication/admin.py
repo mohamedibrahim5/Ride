@@ -9,6 +9,7 @@ from authentication.models import (
     DriverCar,
     Customer,
     CustomerPlace,
+    RideStatus
 )
 
 admin.site.unregister(Group)
@@ -20,3 +21,4 @@ admin.site.register(Driver)
 admin.site.register(DriverCar)
 admin.site.register(Customer)
 admin.site.register(CustomerPlace)
+admin.site.register(RideStatus)

@@ -3,6 +3,8 @@ from authentication.managers import UserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from location_field.models.plain import PlainLocationField
+from django.contrib.gis.db import models as gis_models
+
 
 
 class User(AbstractUser):
@@ -11,6 +13,8 @@ class User(AbstractUser):
     image = models.ImageField(upload_to="user/images/")
     role = models.CharField(max_length=2, choices=ROLE_CHOICES)
     location = PlainLocationField(based_fields=["cairo"])
+    location2 = gis_models.PointField(srid=4326, null=True, blank=True)
+
 
     # inherited attributes
     username = None
@@ -100,3 +104,30 @@ class CustomerPlace(models.Model):
 
     def __str__(self):
         return self.customer.name
+
+
+from django.db import models
+from django.conf import settings
+
+class RideStatus(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("accepted", "Accepted"),
+        ("starting", "Starting"),
+        ("arriving", "Arriving"),
+        ("finished", "Finished"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name="rides_as_client")
+    provider = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="rides_as_provider")
+    service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+
+    pickup_lat = models.FloatField(null=True, blank=True)
+    pickup_lng = models.FloatField(null=True, blank=True)
+    drop_lat = models.FloatField(null=True, blank=True)
+    drop_lng = models.FloatField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+

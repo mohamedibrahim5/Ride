@@ -13,6 +13,11 @@ from authentication.views import (
     DriverCarViewSet,
     CustomerPlaceViewSet,
     ProviderViewSet,
+    RequestProviderView,
+    StartRideRequestView,
+    BroadcastRideRequestView,
+    ProviderRideResponseView,
+    UpdateRideStatusView
 )
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
@@ -37,4 +42,15 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("delete/", DeleteUserView.as_view(), name="delete-user"),
     path("", include(router.urls)),
+    path("request-provider/", RequestProviderView.as_view(), name="request-provider"),
+
+    path("start-ride/", StartRideRequestView.as_view(), name="start-ride"),
+
+    #a7aa7a 
+    path("book-ride/", BroadcastRideRequestView.as_view(), name="book-ride"),
+    path("ride/respond/", ProviderRideResponseView.as_view(), name="provider_ride_response"),
+    path("update-ride/", UpdateRideStatusView.as_view(), name="update_ride" ),   
+
+
+
 ]

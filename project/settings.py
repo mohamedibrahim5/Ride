@@ -32,6 +32,8 @@ INSTALLED_APPS = [
     "fcm_django",
     "django_filters",
     "channels",
+    "core",
+    "django.contrib.gis"
 ]
 
 MIDDLEWARE = [
@@ -66,22 +68,53 @@ ASGI_APPLICATION = "project.asgi.application"
 WSGI_APPLICATION = "project.wsgi.application"
 
 if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': 'ride_db',
+            'USER': 'postgres',
+            'PASSWORD': 'cyparta@2024',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+    # DATABASES = {
+    #     'default': {
+    #         'ENGINE': 'django.db.backends.mysql',
+    #         'NAME': 'scooter',
+    #         'USER': 'root',
+    #         'PASSWORD': 'cyparta@2024',
+    #         'HOST':'localhost',
+    #         'PORT':'3306',
+    #     }
+    # }
     # DATABASES = {
     #     "default": {
     #         "ENGINE": "django.db.backends.sqlite3",
     #         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
     #     }
     # }
-    DATABASES = {
+
+    CHANNEL_LAYERS = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": "railway",  # Replace with your actual DB name
-            "USER": "postgres",  # Replace with your actual DB user
-            "PASSWORD": "ujbmacKsYJwgzqDZyuCtXntbVfNBNxIE",  # Replace with your actual DB password
-            "HOST": "postgres.railway.internal",  # Use Railway's host
-            "PORT": "5432",  # PostgreSQL default port
-        }
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [("127.0.0.1", 6379)],#192.168.1.8, 192.168.1.23
+                # "prefix": "gradcam",
+            },
+        },
     }
+
+    # DATABASES = {
+    #     "default": {
+    #         "ENGINE": "django.db.backends.postgresql",
+    #         "NAME": "railway",  # Replace with your actual DB name
+    #         "USER": "postgres",  # Replace with your actual DB user
+    #         "PASSWORD": "ujbmacKsYJwgzqDZyuCtXntbVfNBNxIE",  # Replace with your actual DB password
+    #         "HOST": "postgres.railway.internal",  # Use Railway's host
+    #         "PORT": "5432",  # PostgreSQL default port
+    #     }
+    # }
 else:
     DATABASES = {
         "default": {
