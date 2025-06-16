@@ -3,7 +3,7 @@ FROM python:3.10-slim-buster
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# 1. Install system dependencies (GDAL 3.4.1)
+# 1. First install dependencies without version pinning
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
@@ -11,24 +11,27 @@ RUN apt-get update && \
     libpq-dev \
     binutils \
     libproj-dev \
-    libgdal-dev=3.4.1+dfsg-1 \
-    gdal-bin=3.4.1+dfsg-1 \
+    libgdal-dev \
+    gdal-bin \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Set GDAL paths (Debian Buster default locations)
+# 2. Find and verify the installed GDAL version
+RUN gdalinfo --version
+
+# 3. Set environment variables
 ENV GDAL_LIBRARY_PATH="/usr/lib/libgdal.so" \
     GEOS_LIBRARY_PATH="/usr/lib/libgeos_c.so" \
     LD_LIBRARY_PATH="/usr/lib"
 
 WORKDIR /ride_server
 
-# 3. Install Python dependencies first (for caching)
+# 4. Install Python dependencies
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# 4. Install GDAL Python package (MUST match system version)
-RUN pip install GDAL==3.4.1  # Must match `libgdal-dev` version
+# 5. Install matching Python GDAL package
+RUN pip install GDAL==$(gdal-config --version | cut -d. -f1-2)
 
 COPY . .
 
