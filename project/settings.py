@@ -152,8 +152,7 @@ else:
 
 AUTH_USER_MODEL = "authentication.User"
 
-GDAL_LIBRARY_PATH = "/lib/libgdal.so.30"
-
+GDAL_LIBRARY_PATH = "/usr/lib/libgdal.so"
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
