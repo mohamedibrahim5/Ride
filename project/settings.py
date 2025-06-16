@@ -18,9 +18,34 @@ CSRF_TRUSTED_ORIGINS = [
     "http://ride-production-f23c.up.railway.app",
 ]
 
-GDAL_LIBRARY_PATH = "/lib/libgdal.so"
+GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so')
+
+# Alternative common paths to try if the default doesn't work
+possible_gdal_paths = [
+    '/usr/lib/libgdal.so',
+    '/usr/lib/x86_64-linux-gnu/libgdal.so',
+    '/usr/local/lib/libgdal.so',
+    '/lib/libgdal.so',
+]
+
+# Check which path exists
+for path in possible_gdal_paths:
+    if os.path.exists(path):
+        GDAL_LIBRARY_PATH = path
+        break
+
 print(f"✅ GDAL_LIBRARY_PATH set to: {GDAL_LIBRARY_PATH}")
 
+# Verify the file exists
+if not os.path.exists(GDAL_LIBRARY_PATH):
+    print(f"❌ Error: GDAL library not found at {GDAL_LIBRARY_PATH}")
+    print("Please install GDAL and set the correct path:")
+    print("On Ubuntu/Debian: sudo apt-get install gdal-bin libgdal-dev")
+    print("Then locate the library with: find / -name 'libgdal.so*' 2>/dev/null")
+else:
+    print(f"✓ GDAL library found at {GDAL_LIBRARY_PATH}")
+    
+    
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
