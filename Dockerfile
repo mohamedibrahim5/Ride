@@ -3,7 +3,7 @@ FROM python:3.10-slim-buster
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# 1. First install dependencies without version pinning
+# Install system dependencies with explicit versions
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
@@ -15,23 +15,24 @@ RUN apt-get update && \
     gdal-bin \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Find and verify the installed GDAL version
-RUN gdalinfo --version
-
-# 3. Set environment variables
+# Set GDAL environment variables
 ENV GDAL_LIBRARY_PATH="/usr/lib/libgdal.so" \
     GEOS_LIBRARY_PATH="/usr/lib/libgeos_c.so" \
     LD_LIBRARY_PATH="/usr/lib"
 
 WORKDIR /ride_server
 
-# 4. Install Python dependencies
+# Install Python dependencies in two stages for better caching
 COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
 
-# 5. Install matching Python GDAL package
-RUN pip install GDAL==$(gdal-config --version | cut -d. -f1-2)
+# First install GDAL with system package (avoids compilation)
+RUN apt-get update && \
+    apt-get install -y python3-gdal && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir GDAL==$(gdal-config --version | cut -d. -f1-2) --no-binary GDAL
+
+# Then install other requirements
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
