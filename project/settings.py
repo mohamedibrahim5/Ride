@@ -18,6 +18,9 @@ CSRF_TRUSTED_ORIGINS = [
     "http://ride-production-f23c.up.railway.app",
 ]
 
+GDAL_LIBRARY_PATH = "/lib/libgdal.so"
+print(f"✅ GDAL_LIBRARY_PATH set to: {GDAL_LIBRARY_PATH}")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -151,8 +154,6 @@ else:
     CELERY_WORKER_SEND_TASK_EVENTS = True
 
 AUTH_USER_MODEL = "authentication.User"
-
-GDAL_LIBRARY_PATH = "/usr/lib/libgdal.so"
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
