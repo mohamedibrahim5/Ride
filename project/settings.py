@@ -90,33 +90,33 @@ if DEBUG:
     #         'PORT':'3306',
     #     }
     # }
-    # DATABASES = {
-    #     "default": {
-    #         "ENGINE": "django.db.backends.sqlite3",
-    #         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    #     }
-    # }
-
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [("127.0.0.1", 6379)],#192.168.1.8, 192.168.1.23
-                # "prefix": "gradcam",
-            },
-        },
-    }
-
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": "railway",  # Replace with your actual DB name
-            "USER": "postgres",  # Replace with your actual DB user
-            "PASSWORD": "ujbmacKsYJwgzqDZyuCtXntbVfNBNxIE",  # Replace with your actual DB password
-            "HOST": "postgres.railway.internal",  # Use Railway's host
-            "PORT": "5432",  # PostgreSQL default port
+            "ENGINE": "django.db.backends.sqlite4",
+            "NAME": os.path.join(BASE_DIR, "db.sqlite4"),
         }
     }
+
+    # CHANNEL_LAYERS = {
+    #     "default": {
+    #         "BACKEND": "channels_redis.core.RedisChannelLayer",
+    #         "CONFIG": {
+    #             "hosts": [("127.0.0.1", 6379)],#192.168.1.8, 192.168.1.23
+    #             # "prefix": "gradcam",
+    #         },
+    #     },
+    # }
+
+    # DATABASES = {
+    #     "default": {
+    #         "ENGINE": "django.db.backends.postgresql",
+    #         "NAME": "railway",  # Replace with your actual DB name
+    #         "USER": "postgres",  # Replace with your actual DB user
+    #         "PASSWORD": "ujbmacKsYJwgzqDZyuCtXntbVfNBNxIE",  # Replace with your actual DB password
+    #         "HOST": "postgres.railway.internal",  # Use Railway's host
+    #         "PORT": "5432",  # PostgreSQL default port
+    #     }
+    # }
 else:
     DATABASES = {
         "default": {
