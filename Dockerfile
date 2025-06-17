@@ -15,11 +15,9 @@ RUN apt-get update && apt-get install -y \
     libgdal-dev \
  && rm -rf /var/lib/apt/lists/*
 
-# Optional: help GDAL find correct version
 ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
 ENV C_INCLUDE_PATH=/usr/include/gdal
-
-RUN mkdir -p /ride_server/logs && chown -R root:root /ride_server/logs
+ENV GDAL_VERSION=3.0.4  # Set this to match `gdal-config --version`
 
 WORKDIR /ride_server
 
