@@ -3,8 +3,10 @@ FROM ghcr.io/osgeo/gdal:ubuntu-small-latest
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
+# Install system dependencies + Python venv
 RUN apt-get update && apt-get install -y \
     python3-pip \
+    python3-venv \
     libpq-dev \
     gcc \
     g++ \
@@ -14,12 +16,17 @@ RUN apt-get update && apt-get install -y \
     nano \
  && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /ride_server
+# Create and activate virtual environment
+ENV VENV_PATH="/opt/venv"
+RUN python3 -m venv $VENV_PATH
+ENV PATH="$VENV_PATH/bin:$PATH"
 
+WORKDIR /ride_server
 COPY . /ride_server/
 
-RUN python3 -m pip install --upgrade pip --break-system-packages \
- && python3 -m pip install --break-system-packages -r requirements.txt
+# Now pip install safely within virtualenv
+RUN pip install --upgrade pip \
+ && pip install -r requirements.txt
 
 EXPOSE 8000
 
