@@ -18,8 +18,8 @@ WORKDIR /ride_server
 
 COPY . /ride_server/
 
-RUN python3 -m pip install --upgrade pip \
- && python3 -m pip install -r requirements.txt
+RUN python3 -m pip install --upgrade pip --break-system-packages \
+ && python3 -m pip install --break-system-packages -r requirements.txt
 
 EXPOSE 8000
 
