@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     nano \
     gdal-bin \
     libgdal-dev \
-    python3-gdal \  # ✅ installs GDAL Python bindings
+    python3-gdal \
  && rm -rf /var/lib/apt/lists/*
 
 # Optional: help GDAL find headers
