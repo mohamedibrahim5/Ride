@@ -1,50 +1,51 @@
-# Use GDAL Ubuntu-based image
-FROM ghcr.io/osgeo/gdal:ubuntu-small-latest
+# Base image
+FROM python:3.12-slim
 
-# Environment config
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+# Prevent interactive prompts during build
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system & Python dependencies including GDAL
+# Install system dependencies including GDAL
 RUN apt-get update && apt-get install -y \
-    python3-pip \
-    python3-venv \
     gdal-bin \
     libgdal-dev \
+    binutils \
+    libproj-dev \
+    libgeos-dev \
     libpq-dev \
     gcc \
     g++ \
-    net-tools \
     curl \
     wget \
     nano \
- && rm -rf /var/lib/apt/lists/*
+    git \
+    && ln -s /usr/lib/libgdal.so.* /usr/lib/libgdal.so \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set GDAL paths for Django
+# Set environment variables required by GDAL
 ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
 ENV C_INCLUDE_PATH=/usr/include/gdal
 ENV GDAL_LIBRARY_PATH=/usr/lib/libgdal.so
 
-# (Optional) Log the GDAL version to a file — for debugging
-RUN gdal-config --version > /gdal_version.txt
-
-# Set up Python virtual environment
-ENV VENV_PATH="/opt/venv"
-RUN python3 -m venv $VENV_PATH
-ENV PATH="$VENV_PATH/bin:$PATH"
-
-# Set workdir
+# Set working directory
 WORKDIR /ride_server
 
-# Copy project files
-COPY . /ride_server/
+# Copy requirements and install Python packages
+COPY requirements.txt .
 
-# Install Python requirements inside virtualenv
-RUN pip install --upgrade pip \
- && pip install -r requirements.txt
+# Use virtualenv if desired
+RUN python3 -m venv /opt/venv && \
+    . /opt/venv/bin/activate && \
+    /opt/venv/bin/pip install --upgrade pip && \
+    /opt/venv/bin/pip install -r requirements.txt
+
+# Add venv to PATH
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy Django project
+COPY . .
 
 # Expose port
 EXPOSE 8000
 
-# Start server
+# Run Gunicorn
 CMD ["gunicorn", "project.wsgi:application", "--bind", "0.0.0.0:8000"]
