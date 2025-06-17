@@ -17,9 +17,12 @@ RUN apt-get update && apt-get install -y \
 
 ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
 ENV C_INCLUDE_PATH=/usr/include/gdal
-ENV GDAL_VERSION=3.0.4  # Set this to match `gdal-config --version`
+
+# Set this to match `gdal-config --version`
+ENV GDAL_VERSION=3.0.4
 
 WORKDIR /ride_server
+
 
 COPY . /ride_server/
 
