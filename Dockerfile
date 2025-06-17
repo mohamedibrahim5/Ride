@@ -1,20 +1,24 @@
-FROM osgeo/gdal:alpine-small-latest
+FROM osgeo/gdal:3.7.0-python3.10
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Install system dependencies
-RUN apk update && apk add \
-    python3 py3-pip py3-wheel py3-setuptools \
-    build-base libffi-dev \
-    postgresql-dev \
-    && rm -rf /var/cache/apk/*
+# Install extra dependencies
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    g++ \
+    net-tools \
+    curl \
+    wget \
+    nano \
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /ride_server
 
 COPY . /ride_server/
 
-RUN pip3 install --upgrade pip && pip3 install -r requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
 EXPOSE 8000
 
