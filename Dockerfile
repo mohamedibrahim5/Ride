@@ -1,21 +1,21 @@
 FROM python:3.10-slim-buster
 
-ENV PYTHONUNBUFFERED 1
-ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
-# Install system dependencies including GDAL
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     gcc \
+    g++ \
     net-tools \
     curl \
     wget \
     nano \
     gdal-bin \
     libgdal-dev \
-    && apt-get clean
+ && rm -rf /var/lib/apt/lists/*
 
-# Set environment variable to help pip find gdal-config
+# Optional: help GDAL find correct version
 ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
 ENV C_INCLUDE_PATH=/usr/include/gdal
 
