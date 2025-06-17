@@ -13,7 +13,9 @@ RUN apt-get update && apt-get install -y \
     nano \
     gdal-bin \
     libgdal-dev \
+    python3-gdal \  # ✅ This is key
  && rm -rf /var/lib/apt/lists/*
+
 
 ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
 ENV C_INCLUDE_PATH=/usr/include/gdal
