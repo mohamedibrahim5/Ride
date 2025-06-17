@@ -13,21 +13,21 @@ RUN apt-get update && apt-get install -y \
     nano \
     gdal-bin \
     libgdal-dev \
-    python3-gdal \  # ✅ This is key
+    python3-gdal \  # ✅ installs GDAL Python bindings
  && rm -rf /var/lib/apt/lists/*
 
-
+# Optional: help GDAL find headers
 ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
 ENV C_INCLUDE_PATH=/usr/include/gdal
 
-# Set this to match `gdal-config --version`
-ENV GDAL_VERSION=3.0.4
+RUN mkdir -p /ride_server/logs && chown -R root:root /ride_server/logs
 
 WORKDIR /ride_server
 
-
 COPY . /ride_server/
 
+# ✅ Avoid installing GDAL from PyPI again
+RUN sed -i '/^gdal==/d' requirements.txt || true
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 EXPOSE 8000
