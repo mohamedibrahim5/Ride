@@ -1,4 +1,4 @@
-FROM ghcr.io/osgeo/gdal:3.7.0-python3.10
+FROM ghcr.io/osgeo/gdal:ubuntu-small-latest
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -14,5 +14,4 @@ RUN pip install --upgrade pip \
  && pip install -r requirements.txt
 
 EXPOSE 8000
-
 CMD ["gunicorn", "project.wsgi:application", "--bind", "0.0.0.0:8000"]
